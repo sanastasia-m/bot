@@ -22,8 +22,8 @@ reply_keyboard = [['/change_city', '/start_play'],
                   ['/will_have_snow', '/will_have_fog', '/will_have_rain']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
-play_keyboard = [['а', 'б'],
-                 ['с', '/stop_play']]
+play_keyboard = [['а', 'б', 'с'],
+                 ['продолжить', '/stop_play']]
 markup2 = ReplyKeyboardMarkup(play_keyboard, one_time_keyboard=False)
 
 yes_or_no = [['да'], ['нет']]
@@ -41,18 +41,18 @@ def change_city(update, context):
 
 def stickers(w):
     if 'облачно' in w.detailed_status or 'пасмурно' in w.detailed_status:
-        return (random.choice(if_cloudly))
+        return random.choice(if_cloudly)
     elif ('солнечно' in w.detailed_status or 'ясно' in w.detailed_status) and \
             int(w.temperature("celsius")["temp"]) >= 25:
-        return (random.choice(if_sunny_and_hot))
+        return random.choice(if_sunny_and_hot)
     elif 'солнечно' in w.detailed_status or 'ясно' in w.detailed_status:
-        return (random.choice(if_sunny))
+        return random.choice(if_sunny)
     elif 'дождь' in w.detailed_status or 'дождливо' in w.detailed_status:
-        return (random.choice(if_rainy))
+        return random.choice(if_rainy)
     elif 'снег' in w.detailed_status:
-        return (random.choice(if_snowy))
+        return random.choice(if_snowy)
     elif 'дымка' in w.detailed_status or 'туман' in w.detailed_status or 'мгла' in w.detailed_status:
-        return (random.choice(if_fogy))
+        return random.choice(if_fogy)
     else:
         print(w.detailed_status)
 
@@ -124,7 +124,7 @@ def daily(update, context):
     update.message.reply_sticker(stickers(w))
 
 
-def h3(update, contex):
+def h3(update, context):
     place = city
     config_dict = get_default_config()
     config_dict['language'] = 'ru'
@@ -208,22 +208,59 @@ def start_play(update, context):
 
 def q1(update, context):
     global quest, already_asked, ask
-    if update.message.text.lower() != 'нет':
-        if len(ask) == 0:
-            ask = for_ask.copy()
+    if update.message.text != '/stop_play':
+        if update.message.text.lower() != 'нет':
+            if len(ask) == 0:
+                ask = for_ask.copy()
+                update.message.reply_text(f'Вопросы закончились. Вы решили {right_answers} из 7. Поздравляю!')
+                update.message.reply_sticker(random.choice(if_not))
+                update.message.reply_text(f'Привет, узнаем погоду для города {city}?\n'
+                                          '/change_city для смены города по умолчанию\n'
+                                          '/daily для прогноза на завтра в определенное время в формате 00.00\n'
+                                          '/now для прогноза прямо сейчас\n'
+                                          '/h3 для прогноза через 3 часа\n'
+                                          '/will_have_snow узнать будет ли снег в ближайшие три часа\n'
+                                          '/will_have_rain узнать будет ли дождь в ближайшие три часа\n'
+                                          '/will_have_fog узнать будет ли туман в ближайшие три часа\n'
+                                          '/start_play для начала игры',
+                                          reply_markup=markup)
+                return ConversationHandler.END
+            else:
+                quest = random.choice([i for i in (ask.keys())])
+                already_asked.append(quest)
+                update.message.reply_photo(quest)
+                update.message.reply_text('Введите букву', reply_markup=markup2)
+            return 2
+        else:
             update.message.reply_text(f'Вопросы закончились. Вы решили {right_answers} из 7. Поздравляю!')
             update.message.reply_sticker(random.choice(if_not))
+            update.message.reply_text(f'Привет, узнаем погоду для города {city}?\n'
+                                      '/change_city для смены города по умолчанию\n'
+                                      '/daily для прогноза на завтра в определенное время в формате 00.00\n'
+                                      '/now для прогноза прямо сейчас\n'
+                                      '/h3 для прогноза через 3 часа\n'
+                                      '/will_have_snow узнать будет ли снег в ближайшие три часа\n'
+                                      '/will_have_rain узнать будет ли дождь в ближайшие три часа\n'
+                                      '/will_have_fog узнать будет ли туман в ближайшие три часа\n'
+                                      '/start_play для начала игры',
+                                      reply_markup=markup)
             return ConversationHandler.END
-        else:
-            quest = random.choice([i for i in (ask.keys())])
-            already_asked.append(quest)
-            update.message.reply_photo(quest)
-            update.message.reply_text('Введите букву', reply_markup=markup2)
-        return 2
-    else:
+    elif update.message.text == '/stop_play':
         update.message.reply_text(f'Вопросы закончились. Вы решили {right_answers} из 7. Поздравляю!')
         update.message.reply_sticker(random.choice(if_not))
+        update.message.reply_text(f'Привет, узнаем погоду для города {city}?\n'
+                                  '/change_city для смены города по умолчанию\n'
+                                  '/daily для прогноза на завтра в определенное время в формате 00.00\n'
+                                  '/now для прогноза прямо сейчас\n'
+                                  '/h3 для прогноза через 3 часа\n'
+                                  '/will_have_snow узнать будет ли снег в ближайшие три часа\n'
+                                  '/will_have_rain узнать будет ли дождь в ближайшие три часа\n'
+                                  '/will_have_fog узнать будет ли туман в ближайшие три часа\n'
+                                  '/start_play для начала игры',
+                                  reply_markup=markup)
         return ConversationHandler.END
+    else:
+        update.message.reply_text('Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
 
 
 def q2(update, context):
@@ -231,25 +268,47 @@ def q2(update, context):
     if update.message.text != '/stop_play':
         if update.message.text.lower() == ask[quest]:
             update.message.reply_text('Верно!\n'
-                                      'Введите любой текст для продолжения или команду /stop_play для завершения игры.')
+                                      'Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
             update.message.reply_sticker(random.choice(if_not))
             right_answers += 1
         else:
 
             update.message.reply_text('Ошибка!\n'
-                                      'Введите любой текст для продолжения или команду /stop_play для завершения игры.')
+                                      'Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
             update.message.reply_sticker(random.choice(if_wrong))
         del ask[quest]
         return 1
-    else:
+    elif update.message.text == '/stop_play':
         update.message.reply_text(f'Вопросы закончились. Вы решили {right_answers} из 7. Поздравляю!')
         update.message.reply_sticker(random.choice(if_not))
+        update.message.reply_text(f'Привет, узнаем погоду для города {city}?\n'
+                                  '/change_city для смены города по умолчанию\n'
+                                  '/daily для прогноза на завтра в определенное время в формате 00.00\n'
+                                  '/now для прогноза прямо сейчас\n'
+                                  '/h3 для прогноза через 3 часа\n'
+                                  '/will_have_snow узнать будет ли снег в ближайшие три часа\n'
+                                  '/will_have_rain узнать будет ли дождь в ближайшие три часа\n'
+                                  '/will_have_fog узнать будет ли туман в ближайшие три часа\n'
+                                  '/start_play для начала игры',
+                                  reply_markup=markup)
         return ConversationHandler.END
+    else:
+        update.message.reply_text('Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
 
 
 def stop_play(update, context):
     update.message.reply_text(f'Вопросы закончились. Вы решили {right_answers} из 7. Поздравляю!')
     update.message.reply_sticker(random.choice(if_not))
+    update.message.reply_text(f'Привет, узнаем погоду для города {city}?\n'
+                              '/change_city для смены города по умолчанию\n'
+                              '/daily для прогноза на завтра в определенное время в формате 00.00\n'
+                              '/now для прогноза прямо сейчас\n'
+                              '/h3 для прогноза через 3 часа\n'
+                              '/will_have_snow узнать будет ли снег в ближайшие три часа\n'
+                              '/will_have_rain узнать будет ли дождь в ближайшие три часа\n'
+                              '/will_have_fog узнать будет ли туман в ближайшие три часа\n'
+                              '/start_play для начала игры',
+                              reply_markup=markup)
     return ConversationHandler.END
 
 
