@@ -18,7 +18,7 @@ city = 'Москва'
 TOKEN = '1757315846:AAGq5vQW8tdmzGZDkwfOkqPik5S7hT_gR7o'
 
 reply_keyboard = [['/change_city', '/start_play'],
-                  ['/daily', '/now', '/h3', '/stop'],
+                  ['/daily', '/now', '/h3', '/start'],
                   ['/will_have_snow', '/will_have_fog', '/will_have_rain']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
@@ -36,7 +36,7 @@ def change_city(update, context):
         city = update.message.text.split()[1]
         update.message.reply_text(f'Город по умолчанию: {city}')
     except IndexError:
-        update.message.reply_text(f'Введите в формате /change_city "город"')
+        update.message.reply_text(f'Введите в формате /change_city "город" или /start для возврата.')
 
 
 def stickers(w):
@@ -54,7 +54,7 @@ def stickers(w):
     elif 'дымка' in w.detailed_status or 'туман' in w.detailed_status or 'мгла' in w.detailed_status:
         return random.choice(if_fogy)
     else:
-        print(w.detailed_status)
+        return random.choice(if_yes)
 
 
 def start(update, context):
@@ -70,17 +70,12 @@ def start(update, context):
                               reply_markup=markup)
 
 
-def stop(update, context):
-    print('stop')
-
-
 def now(update, context):
     place = city
     config_dict = get_default_config()
     config_dict['language'] = 'ru'
     owm = OWM('3c55bbaac015f0a173e15d6345bf3970', config_dict)
     mgr = owm.weather_manager()
-    # print(place)
     observation = mgr.weather_at_place(place)
     w = observation.weather
     update.message.reply_text("\n".join([
@@ -260,7 +255,8 @@ def q1(update, context):
                                   reply_markup=markup)
         return ConversationHandler.END
     else:
-        update.message.reply_text('Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
+        update.message.reply_text('Нажмите "продолжить" или любую букву для продолжения,'
+                                  ' или команду /stop_play для завершения игры.')
 
 
 def q2(update, context):
@@ -268,13 +264,15 @@ def q2(update, context):
     if update.message.text != '/stop_play':
         if update.message.text.lower() == ask[quest]:
             update.message.reply_text('Верно!\n'
-                                      'Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
+                                      'Нажмите "продолжить" для продолжения или команду '
+                                      '/stop_play для завершения игры.')
             update.message.reply_sticker(random.choice(if_not))
             right_answers += 1
         else:
 
             update.message.reply_text('Ошибка!\n'
-                                      'Нажмите "продолжить" для продолжения или команду /stop_play для завершения игры.')
+                                      'Нажмите "продолжить" для продолжения или команду '
+                                      '/stop_play для завершения игры.')
             update.message.reply_sticker(random.choice(if_wrong))
         del ask[quest]
         return 1
@@ -317,7 +315,6 @@ def main():
     dp = updater.dispatcher
     updater.start_polling()
     dp = updater.dispatcher
-    dp.add_handler(CommandHandler("stop", stop))
     updater.start_polling()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start_play', start_play)],
